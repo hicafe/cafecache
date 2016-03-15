@@ -28,7 +28,7 @@ func main() {
 func handleConnection(conn net.Conn) {
 	tmpBuffer := make([]byte, 0)
 	readerChannel := make(chan []byte, 16)
-	go reader(readerChannel)
+	go reader(readerChannel, conn)
 	buffer := make([]byte, 1024)
 	for {
 		n, err := conn.Read(buffer)
@@ -39,11 +39,12 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func reader(readerChannel chan []byte) {
+func reader(readerChannel chan []byte, conn net.Conn) {
 	for {
 		select {
 		case data := <-readerChannel:
-			handler.HandleData(data)
+			result := handler.HandleData(data)
+			conn.Write(result)
 		}
 	}
 }

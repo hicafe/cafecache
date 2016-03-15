@@ -10,7 +10,7 @@ var buckets = make(map[string]map[string]string)
 var bucketsLock = make(map[string]sync.RWMutex)
 var lock = new(sync.RWMutex)
 
-func HandleData(data []byte) {
+func HandleData(data []byte) []byte {
 	var _map = make(map[string]string)
 	json.Unmarshal(data, &_map)
 
@@ -18,17 +18,33 @@ func HandleData(data []byte) {
 	bucket := _map["b"]
 	key := _map["k"]
 	value := _map["v"]
+	var code int
+	var result string
 
 	switch op {
 	case "CREATE_BUCKET":
-		createBucket(bucket)
+		code = createBucket(bucket)
 	case "DEL_BUCKET":
-		deleteBucket(bucket)
+		code = deleteBucket(bucket)
 	case "PUT":
-		put(bucket, key, value)
+		code = put(bucket, key, value)
 	case "DEL":
-		del(bucket, key)
+		code = del(bucket, key)
+	case "GET":
+		code, result = get(bucket, key)
 	default:
 		fmt.Println(op)
 	}
+
+	res := &resultStruct{}
+	res.code = code
+	res.value = result
+	j, _ := json.Marshal(res)
+	return j
+
+}
+
+type resultStruct struct {
+	code  int    `json:"code"`
+	value string `json:"value"`
 }
